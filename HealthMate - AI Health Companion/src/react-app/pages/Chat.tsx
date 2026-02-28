@@ -177,6 +177,9 @@ function Navigation() {
           <Link to="/chat">
             <Button variant="ghost" size="sm" className="text-emerald-600">Chat</Button>
           </Link>
+          <Link to="/assessment">
+            <Button variant="ghost" size="sm">Assessment</Button>
+          </Link>
           <Link to="/reports">
             <Button variant="ghost" size="sm">Reports</Button>
           </Link>

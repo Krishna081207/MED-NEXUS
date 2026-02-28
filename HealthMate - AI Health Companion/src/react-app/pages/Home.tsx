@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Button } from "@/react-app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/react-app/components/ui/card";
-import { MessageCircleHeart, FileText, Stethoscope, Heart, Shield, Sparkles } from "lucide-react";
+import { MessageCircleHeart, FileText, Stethoscope, Heart, Shield, Sparkles, Brain } from "lucide-react";
 
 export default function HomePage() {
   const features = [
@@ -13,18 +13,25 @@ export default function HomePage() {
       color: "from-emerald-500 to-teal-600",
     },
     {
+      icon: Brain,
+      title: "Health Assessment",
+      description: "Assess your mental and physical health by describing your symptoms and get AI-powered analysis and recommendations.",
+      link: "/assessment",
+      color: "from-blue-500 to-purple-600",
+    },
+    {
       icon: FileText,
       title: "Health Report Analysis",
       description: "Upload your health reports and get instant AI-powered insights and explanations in simple language.",
       link: "/reports",
-      color: "from-blue-500 to-indigo-600",
+      color: "from-indigo-500 to-pink-600",
     },
     {
       icon: Stethoscope,
       title: "Connect with Doctors",
       description: "Find and connect with healthcare professionals for consultations and expert medical advice.",
       link: "/doctors",
-      color: "from-purple-500 to-pink-600",
+      color: "from-purple-500 to-rose-600",
     },
   ];
 
@@ -44,6 +51,9 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <Link to="/chat">
               <Button variant="ghost" size="sm">Chat</Button>
+            </Link>
+            <Link to="/assessment">
+              <Button variant="ghost" size="sm">Assessment</Button>
             </Link>
             <Link to="/reports">
               <Button variant="ghost" size="sm">Reports</Button>
@@ -99,7 +109,7 @@ export default function HomePage() {
               Comprehensive health support powered by artificial intelligence
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature) => (
               <Link key={feature.title} to={feature.link} className="group">
                 <Card className="h-full bg-white/70 dark:bg-slate-900/50 backdrop-blur-sm border-slate-200/50 dark:border-slate-800/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1">
