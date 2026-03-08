@@ -66,7 +66,7 @@ async def chat(request: ChatRequest):
         
         # Initialize LangChain ChatGoogleGenerativeAI
         llm = ChatGoogleGenerativeAI(
-            model="gemini-pro",
+            model="gemini-1.5-flash",
             google_api_key=GEMINI_API_KEY,
             temperature=0.7
         )
@@ -129,7 +129,7 @@ async def assess_health(request: HealthAssessmentRequest):
         
         # Initialize LangChain ChatGoogleGenerativeAI
         llm = ChatGoogleGenerativeAI(
-            model="gemini-pro",
+            model="gemini-1.5-flash",
             google_api_key=GEMINI_API_KEY,
             temperature=0.8
         )
@@ -244,7 +244,7 @@ async def analyze_report(file: UploadFile = File(...)):
             )
         
         llm = ChatGoogleGenerativeAI(
-            model="gemini-pro",
+            model="gemini-1.5-flash",
             google_api_key=GEMINI_API_KEY,
             temperature=0.3
         )
