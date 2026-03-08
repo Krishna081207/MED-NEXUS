@@ -5,7 +5,8 @@ interface Message {
   parts: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Use empty string to hit same-origin (Vite proxy forwards /api to backend)
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 /**
  * Chat with AI using the backend API
