@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Button } from "@/react-app/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/react-app/components/ui/card";
+import { Card } from "@/react-app/components/ui/card";
 import { Input } from "@/react-app/components/ui/input";
 import { Heart, ArrowLeft, Stethoscope, Search, MapPin, Star, Video, Phone } from "lucide-react";
 
