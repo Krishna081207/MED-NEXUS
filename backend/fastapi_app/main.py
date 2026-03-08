@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import os
+import io
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage
+from PyPDF2 import PdfReader
 
 load_dotenv()
 
@@ -201,6 +203,119 @@ Be concise and practical."""
             physical_health="Assessment failed.",
             overall_recommendation="Please try again later.",
             risk_level="unknown",
+            error=str(e)
+        )
+
+class ReportAnalysisResponse(BaseModel):
+    summary: str
+    key_findings: str
+    recommendations: str
+    plain_language_explanation: str
+    error: Optional[str] = None
+
+@app.post("/api/analyze-report", response_model=ReportAnalysisResponse)
+async def analyze_report(file: UploadFile = File(...)):
+    try:
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
+            raise HTTPException(status_code=400, detail="Please upload a PDF file")
+        
+        contents = await file.read()
+        reader = PdfReader(io.BytesIO(contents))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        
+        if not text.strip():
+            return ReportAnalysisResponse(
+                summary="Could not extract text from this PDF.",
+                key_findings="The PDF may be scanned or image-based. Try uploading a text-based PDF.",
+                recommendations="Consider using a text-based health report or re-scanning with OCR.",
+                plain_language_explanation="We couldn't read the content of your report.",
+                error="No text extracted from PDF"
+            )
+        
+        if not GEMINI_API_KEY:
+            return ReportAnalysisResponse(
+                summary="AI analysis is not configured.",
+                key_findings="Please set up the API key to enable report analysis.",
+                recommendations="Contact support for assistance.",
+                plain_language_explanation="Report analysis requires configuration.",
+                error="API not configured"
+            )
+        
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-pro",
+            google_api_key=GEMINI_API_KEY,
+            temperature=0.3
+        )
+        
+        prompt = f"""You are a health report analyst. Analyze this medical/health report. Respond with exactly these 4 sections, each starting with the header on its own line:
+
+SUMMARY:
+[A 2-3 sentence overview of what the report shows]
+
+KEY FINDINGS:
+[Bullet points of important values/results in simple terms]
+
+RECOMMENDATIONS:
+[What the patient should do next or discuss with their doctor]
+
+PLAIN LANGUAGE:
+[Explain the report in simple, non-medical terms for the patient]
+
+Report content:
+---
+{text[:12000]}
+---
+
+Be compassionate and clear. Remind that this is not medical advice."""
+
+        response = llm.invoke([HumanMessage(content=prompt)])
+        ai_content = response.content
+        
+        def extract_section(content: str, header: str, next_headers: list) -> str:
+            c_upper = content.upper()
+            start = c_upper.find(header.upper())
+            if start == -1:
+                return ""
+            start += len(header)
+            end = len(content)
+            for nh in next_headers:
+                pos = c_upper.find(nh.upper(), start)
+                if pos != -1 and pos < end:
+                    end = pos
+            return content[start:end].strip()
+        
+        summary = extract_section(ai_content, "SUMMARY:", ["KEY FINDINGS:", "RECOMMENDATIONS:", "PLAIN LANGUAGE:"])
+        key_findings = extract_section(ai_content, "KEY FINDINGS:", ["SUMMARY:", "RECOMMENDATIONS:", "PLAIN LANGUAGE:"])
+        recommendations = extract_section(ai_content, "RECOMMENDATIONS:", ["SUMMARY:", "KEY FINDINGS:", "PLAIN LANGUAGE:"])
+        plain_language = extract_section(ai_content, "PLAIN LANGUAGE:", ["SUMMARY:", "KEY FINDINGS:", "RECOMMENDATIONS:"])
+        
+        if not summary:
+            summary = ai_content[:800]
+        if not key_findings:
+            key_findings = ai_content[:800]
+        if not recommendations:
+            recommendations = ai_content[:800]
+        if not plain_language:
+            plain_language = ai_content[:800]
+        
+        return ReportAnalysisResponse(
+            summary=summary,
+            key_findings=key_findings,
+            recommendations=recommendations,
+            plain_language_explanation=plain_language
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in report analysis: {str(e)}")
+        return ReportAnalysisResponse(
+            summary="Analysis failed.",
+            key_findings="",
+            recommendations="Please try again or upload a different file.",
+            plain_language_explanation="",
             error=str(e)
         )
 
